@@ -42,11 +42,37 @@ class SoftmaxRegression:
         self.b = np.zeros(self.num_classes)
 
     def forward(self, X: np.ndarray) -> np.ndarray:
+        """
+        Compute class probabilities by applying softmax
+        to the linear logits XW + b.
+
+        Args:
+            X: Input batch of shape (batch_size, input_dim).
+
+        Returns:
+            Class probabilities of shape (batch_size, num_classes).
+        """
         logits = X @ self.W + self.b
         return softmax(logits)
 
-    def compute_gradients(self, X: np.ndarray, Y: np.ndarray):        
-        pass
+    def compute_gradients(self, X: np.ndarray, Y: np.ndarray) -> tuple[np.ndarray, np.ndarray]:        
+        """
+        Compute gradients of mean cross-entropy loss with respect
+        to the model weights and biases.
 
+        Args:
+            X: Input batch of shape (batch_size, input_dim).
+            Y: One-hot labels of shape (batch_size, num_classes).
+
+        Returns:
+            Tuple containing weight and bias gradients.
+        """
+        m = X.shape[0]
+        P = self.forward(X)
+        error = P - Y        
+        dW = (X.T @ error) / m
+        db = np.sum(error, axis=0) / m        
+        return dW, db
+        
     def fit(self):
         pass
