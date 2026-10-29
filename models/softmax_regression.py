@@ -17,3 +17,18 @@ def softmax(z: np.ndarray) -> np.ndarray:
     z_new = z - np.max(z, axis=1, keepdims=True)
     exp_z = np.exp(z_new)
     return exp_z / np.sum(exp_z, axis=1, keepdims=True)
+
+
+def cross_entropy(probs: np.ndarray, targets: np.ndarray) -> float:
+    """
+    Compute the mean categorical cross-entropy loss.
+
+    Args:
+        probs: Predicted class probabilities, shape (batch_size, num_classes).
+        targets: One-hot encoded labels with the same shape.
+
+    Returns:
+        Mean cross-entropy loss across the batch.
+    """
+    safe_probs = np.clip(probs, 1e-12, 1.0)
+    return - np.mean(np.sum(targets * np.log(safe_probs), axis=1))

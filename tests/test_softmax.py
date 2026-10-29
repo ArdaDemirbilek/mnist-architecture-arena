@@ -1,52 +1,116 @@
 import numpy as np
 
-from models.softmax_regression import softmax
+from models.softmax_regression import softmax, cross_entropy
 
 
-def test_softmax_probability_normalization():
-    logits = np.array([
-        [2.0, 1.0, 0.0],
-        [0.5, 1.5, 3.0]
-    ])
-    probabilities = softmax(logits)
-    row_sums = np.sum(probabilities, axis=1)
+class TestSoftmax:
+    def test_softmax_probability_normalization(self):
+        """Checks that each row of softmax output sums to 1."""
+        logits = np.array([
+            [2.0, 1.0, 0.0],
+            [0.5, 1.5, 3.0]
+        ])
+        probabilities = softmax(logits)
+        row_sums = np.sum(probabilities, axis=1)
 
-    assert np.allclose(row_sums, 1.0)
+        assert np.allclose(row_sums, 1.0)
+
+    def test_softmax_shape_prevention(self):
+        """Checks that softmax output has the same shape as the input logits."""
+        logits = np.array([
+            [1000.1, 1000.2, 1000.4],
+            [550.9, 999.9, 1000.0],
+            [1500.0, 0.0, 250.5]
+        ])
+
+        probabilities = softmax(logits)
+
+        assert np.shape(logits) == np.shape(probabilities)
+
+    def test_softmax_numerical_stability(self):
+        """Checks that very large logits give finite probabilities between 0 and 1, with no overflow or NaN."""
+        logits = np.array([
+            [1000.1, 1000.2, 1000.4],
+            [550.9, 999.9, 1000.0],
+            [1500.0, 0.0, 250.5]
+        ])
+        probabilities = softmax(logits)
+
+        assert np.all(np.isfinite(probabilities))
+        assert np.all((probabilities >= 0.0) & (probabilities <= 1.0))
+
+    def test_softmax_shift_variance(self):
+        """Checks that adding the same constant to every logit leaves the softmax output unchanged."""
+        logits = np.array([
+            [3.5, 1000.2, 4.4],
+            [0.5, 7.8, 6.3],
+            [3.0, 0.0, 9.9]
+        ])
+        logits_added = logits + 1.0
+
+        probabilities_normal = softmax(logits)
+        probabilities_added = softmax(logits_added)
+
+        assert np.allclose(probabilities_normal, probabilities_added)
 
 
-def test_softmax_shape_prevention():
-    logits = np.array([
-        [1000.1, 1000.2, 1000.4],
-        [550.9, 999.9, 1000.0],
-        [1500.0, 0.0, 250.5]
-    ])
+class TestCrossEntropy:
+    def test_cross_entropy_known_loss_value(self):
+        """Checks that the loss for a small hand-computed example matches the expected value."""
+        test_probs1 = np.array([
+            [0.1, 0.8, 0.1],
+            [0.2, 0.4, 0.3]
+        ])
+        test_targets1 = np.array([
+            [0.0, 1.0, 0.0],
+            [0.0, 0.0, 1.0]
+        ])
+        test_probs2 = np.array([
+            [0.4, 0.3, 0.3],
+            [0.2, 0.4, 0.4]
+        ])
+        test_targets2 = np.array([
+            [0.0, 1.0, 0.0],
+            [0.0, 1.0, 0.0]
+        ])
 
-    probabilities = softmax(logits)
+        assert np.isclose(cross_entropy(test_probs1, test_targets1), 0.713558)
+        assert np.isclose(cross_entropy(test_probs2, test_targets2), 1.060132)
 
-    assert np.shape(logits) == np.shape(probabilities)
+    def test_cross_entropy_numerical_stability(self):
+        """Checks that the loss stays finite when a predicted probability is 0 or very close to 0."""
+        test_probs = np.array([
+            [0.4, 0.0, 0.6],
+            [0.2, 0.5, 0.3]
+        ])
+        test_targets = np.array([
+            [0.0, 1.0, 0.0],
+            [0.0, 0.0, 1.0]
+        ])
 
+        assert np.isfinite(cross_entropy(test_probs, test_targets))
 
-def test_softmax_numerical_stability():
-    logits = np.array([
-        [1000.1, 1000.2, 1000.4],
-        [550.9, 999.9, 1000.0],
-        [1500.0, 0.0, 250.5]
-    ])
-    probabilities = softmax(logits)
+    def test_cross_entropy_mathematical_properties(self):
+        """Checks that the loss is never negative and gets larger as the true class's probability gets smaller."""
+        test_probs1 = np.array([
+            [0.09, 0.01, 0.09],
+            [0.2, 0.4, 0.3]
+        ])
+        test_probs2 = np.array([
+            [0.09, 0.005, 0.09],
+            [0.2, 0.4, 0.1]
+        ])
+        test_targets = np.array([
+            [0.0, 1.0, 0.0],
+            [0.0, 0.0, 1.0]
+        ])
 
-    assert np.all(np.isfinite(probabilities))
-    assert np.all((probabilities >= 0.0) & (probabilities <= 1.0))
+        assert cross_entropy(test_probs1, test_targets) >= 0.0
+        assert cross_entropy(test_probs2, test_targets) > cross_entropy(test_probs1, test_targets)
 
+    def test_cross_entropy_perfect_prediction(self):
+        """Checks that the loss is (close to) 0 when the true class gets probability 1."""
+        test_probs = np.array([[0.0, 1.0, 0.0]])
+        test_targets = np.array([[0.0, 1.0, 0.0]])
 
-def test_softmax_shift_variance():
-    logits = np.array([
-        [3.5, 1000.2, 4.4],
-        [0.5, 7.8, 6.3],
-        [3.0, 0.0, 9.9]
-    ])
-    logits_added = logits + 1.0
-
-    probabilities_normal = softmax(logits)
-    probabilities_added = softmax(logits_added)
-
-    assert np.allclose(probabilities_normal, probabilities_added)
+        assert np.isclose(cross_entropy(test_probs, test_targets), 0.0)
