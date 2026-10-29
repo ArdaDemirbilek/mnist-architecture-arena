@@ -32,3 +32,21 @@ def cross_entropy(probs: np.ndarray, targets: np.ndarray) -> float:
     """
     safe_probs = np.clip(probs, 1e-12, 1.0)
     return - np.mean(np.sum(targets * np.log(safe_probs), axis=1))
+
+
+class SoftmaxRegression:
+    def __init__(self, input_dim: int, num_classes: int):
+        self.input_dim = input_dim
+        self.num_classes = num_classes
+        self.W = np.zeros((self.input_dim, self.num_classes))
+        self.b = np.zeros(self.num_classes)
+
+    def forward(self, X: np.ndarray) -> np.ndarray:
+        logits = X @ self.W + self.b
+        return softmax(logits)
+
+    def compute_gradients(self, X: np.ndarray, Y: np.ndarray):        
+        pass
+
+    def fit(self):
+        pass
