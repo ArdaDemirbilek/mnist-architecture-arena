@@ -1,6 +1,8 @@
 import numpy as np
 
 from models.softmax_regression import softmax, cross_entropy
+from models.softmax_regression import SoftmaxRegression 
+
 
 
 class TestSoftmax:
@@ -114,3 +116,25 @@ class TestCrossEntropy:
         test_targets = np.array([[0.0, 1.0, 0.0]])
 
         assert np.isclose(cross_entropy(test_probs, test_targets), 0.0)
+
+class TestSoftmaxRegression:
+    def test_gradient_values(self):
+        X = np.array([
+            [1.0, 2.0],
+            [-1.0, 0.0]
+        ])
+        Y = np.array([[0.0, 1.0, 0.0], [1.0, 0.0, 0.0]])
+
+        dW_target = np.array([
+            [0.5, -0.5, 0.0],
+            [1/3, -2/3, 1/3]
+        ])
+        db_target = np.array([-1/6, -1/6, 1/3])
+
+        test_model = SoftmaxRegression(2, 3)
+        dW_calc, db_calc = test_model.compute_gradients(X, Y)
+
+        assert np.allclose(dW_calc, dW_target)
+        assert np.allclose(db_calc, db_target)
+
+

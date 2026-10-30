@@ -74,5 +74,26 @@ class SoftmaxRegression:
         db = np.sum(error, axis=0) / m        
         return dW, db
         
-    def fit(self):
-        pass
+    def fit(self, X_train, Y_train, epochs = 20, batch_size = 64, learning_rate = 0.01):
+        history = {
+            "train_loss": []
+        }
+        rng = np.random.default_rng(seed=42)  
+        num_exp = X_train.shape[0]
+
+        for _ in range(epochs):
+            permutation_indices = rng.permutation(num_exp)
+            X_shuffled, Y_shuffled = X_train[permutation_indices], Y_train[permutation_indices]
+
+            for start in range(0, num_exp, batch_size):
+                end = min(start + batch_size, num_exp)
+                X_batch, Y_batch = X_shuffled[start:end], Y_shuffled[start:end]
+                dW, db = self.compute_gradients(X_batch, Y_batch)
+                self.W -= learning_rate * dW
+                self.b -= learning_rate * db
+                
+            s = self.forward(X_train)
+            loss = cross_entropy(s, Y_train)
+            history["train_loss"].append(loss)
+
+        return history
