@@ -75,6 +75,22 @@ class SoftmaxRegression:
         return dW, db
         
     def fit(self, X_train, Y_train, epochs = 20, batch_size = 64, learning_rate = 0.01):
+        """
+        Train the model with mini-batch gradient descent. The training
+        data is shuffled at the start of every epoch, and the loss on
+        the full training set is recorded after each epoch.
+
+        Args:
+            X_train: Training inputs of shape (num_samples, input_dim).
+            Y_train: One-hot labels of shape (num_samples, num_classes).
+            epochs: Number of passes over the training data.
+            batch_size: Number of samples per gradient update.
+            learning_rate: Step size for the parameter updates.
+
+        Returns:
+            Dictionary with a "train_loss" list holding the mean
+            cross-entropy loss after each epoch.
+        """
         history = {
             "train_loss": []
         }
@@ -94,6 +110,6 @@ class SoftmaxRegression:
                 
             s = self.forward(X_train)
             loss = cross_entropy(s, Y_train)
-            history["train_loss"].append(loss)
+            history["train_loss"].append(float(loss))
 
         return history
